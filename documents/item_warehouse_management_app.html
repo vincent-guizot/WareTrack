@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WareTrack — Item Warehouse Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/tabler-icons.min.css" />
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f4f3ef;
+  --surface:#ffffff;
+  --surface2:#f9f8f5;
+  --border:#e2e0d8;
+  --border2:#d0cec4;
+  --text:#1a1916;
+  --text2:#6b6860;
+  --text3:#a09e98;
+  --accent:#1d4ed8;
+  --accent-light:#eff3ff;
+  --accent-text:#1e3a8a;
+  --green:#166534;
+  --green-bg:#dcfce7;
+  --red:#991b1b;
+  --red-bg:#fee2e2;
+  --amber:#92400e;
+  --amber-bg:#fef3c7;
+  --blue:#1e40af;
+  --blue-bg:#dbeafe;
+  --sidebar-w:220px;
+  --radius:8px;
+  --radius-lg:12px;
+  font-family:'DM Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--text);color:#fff;height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;z-index:100}
+.sidebar-logo{padding:20px 18px;border-bottom:1px solid #2d2c28;display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff}
+.logo-text{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;letter-spacing:-0.3px;color:#fff}
+.logo-sub{font-size:10px;color:#888;display:block;margin-top:1px}
+.nav-section{padding:12px 12px 4px;font-size:10px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:0.8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:1px 8px;border-radius:6px;cursor:pointer;transition:background 0.15s;font-size:13px;color:#ccc;font-weight:400}
+.nav-item:hover{background:#2a2927;color:#fff}
+.nav-item.active{background:#1d4ed8;color:#fff}
+.nav-item i{font-size:16px;width:16px}
+.nav-item .badge{margin-left:auto;background:#dc2626;color:#fff;font-size:10px;padding:1px 6px;border-radius:20px;font-weight:500}
+.sidebar-bottom{margin-top:auto;padding:12px;border-top:1px solid #2d2c28}
+.user-chip{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer}
+.user-chip:hover{background:#2a2927}
+.avatar{width:30px;height:30px;border-radius:50%;background:#1d4ed8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0}
+.user-name{font-size:12px;font-weight:500;color:#ddd}
+.user-role{font-size:10px;color:#888}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:15px;font-weight:600;flex:1}
+.topbar-search{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;flex:0 0 240px}
+.topbar-search input{border:none;background:transparent;font-size:13px;outline:none;color:var(--text);width:100%}
+.topbar-search input::placeholder{color:var(--text3)}
+.topbar-btn{width:34px;height:34px;border:1px solid var(--border);border-radius:var(--radius);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:16px;transition:background 0.15s}
+.topbar-btn:hover{background:var(--surface2)}
+.page{padding:24px;display:none}
+.page.active{display:block}
+
+/* CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px}
+.stat-label{font-size:11px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.stat-label i{font-size:14px}
+.stat-value{font-size:26px;font-weight:600;font-family:'Space Mono',monospace;color:var(--text);line-height:1}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:6px}
+.stat-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:500}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-amber{background:var(--amber-bg);color:var(--amber)}
+.badge-blue{background:var(--blue-bg);color:var(--blue)}
+
+/* TABLE */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.card-title{font-size:13px;font-weight:600;flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);transition:all 0.15s;font-family:'DM Sans',sans-serif}
+.btn:hover{background:var(--surface2)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#1e40af}
+.btn-danger{background:var(--red-bg);color:var(--red);border-color:#fca5a5}
+.btn-danger:hover{background:#fecaca}
+.btn-sm{padding:4px 10px;font-size:11px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--surface2);padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid var(--border)}
+td{padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.item-thumb{width:32px;height:32px;border-radius:6px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--accent);flex-shrink:0}
+.item-info{display:flex;align-items:center;gap:10px}
+.item-name{font-weight:500}
+.item-sku{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace}
+.stock-bar{width:80px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.stock-bar-fill{height:100%;border-radius:2px;transition:width 0.3s}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+label{font-size:12px;font-weight:500;color:var(--text2)}
+input,select,textarea{border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none;transition:border 0.15s;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:80px}
+.form-row{display:flex;gap:14px;align-items:flex-end}
+
+/* MODAL OVERLAY */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);width:520px;max-width:95vw;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.modal-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.modal-title{font-size:15px;font-weight:600;flex:1}
+.modal-close{width:28px;height:28px;border:none;background:transparent;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:18px}
+.modal-close:hover{background:var(--surface2)}
+.modal-body{padding:20px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+
+/* CHART BARS */
+.chart-wrap{padding:18px;display:flex;flex-direction:column;gap:12px}
+.chart-bars{display:flex;align-items:flex-end;gap:10px;height:140px}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1}
+.bar{border-radius:4px 4px 0 0;width:100%;min-height:4px;transition:height 0.3s}
+.bar-label{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+
+/* ACTIVITY FEED */
+.activity-list{display:flex;flex-direction:column}
+.activity-item{display:flex;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border)}
+.activity-item:last-child{border-bottom:none}
+.activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.activity-text{font-size:13px;line-height:1.5}
+.activity-time{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* LOCATION / ZONE GRID */
+.zone-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding:18px}
+.zone-cell{border-radius:6px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:500;font-family:'Space Mono',monospace;cursor:pointer;transition:transform 0.15s;border:1px solid transparent}
+.zone-cell:hover{transform:scale(1.05)}
+.zone-empty{background:#f4f3ef;border-color:var(--border);color:var(--text3)}
+.zone-low{background:#dcfce7;border-color:#86efac;color:#166534}
+.zone-mid{background:#fef3c7;border-color:#fbbf24;color:#92400e}
+.zone-high{background:#dbeafe;border-color:#93c5fd;color:#1e40af}
+.zone-full{background:#e8e5dc;border-color:#d0cec4;color:#6b6860}
+
+/* ALERT CARDS */
+.alert{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-radius:var(--radius);margin-bottom:10px;font-size:13px}
+.alert-warning{background:var(--amber-bg);color:var(--amber);border:1px solid #fcd34d}
+.alert-danger{background:var(--red-bg);color:var(--red);border:1px solid #fca5a5}
+.alert-success{background:var(--green-bg);color:var(--green);border:1px solid #86efac}
+.alert-info{background:var(--blue-bg);color:var(--blue);border:1px solid #93c5fd}
+.alert i{font-size:16px;flex-shrink:0;margin-top:1px}
+
+/* TRANSFER PAGE */
+.transfer-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px}
+
+/* SECTION HEADER */
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.section-title{font-size:18px;font-weight:600}
+.section-sub{font-size:13px;color:var(--text3);flex:1}
+
+/* TABS */
+.tabs{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:3px;margin-bottom:20px;width:fit-content}
+.tab{padding:6px 16px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;color:var(--text2);transition:all 0.15s}
+.tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+
+/* SUPPLIER PAGE */
+.supplier-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.supplier-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
+.supplier-logo{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px}
+.supplier-name{font-weight:600;font-size:13px}
+.supplier-meta{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* REPORTS */
+.report-grid{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+.progress-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.progress-item:last-child{border-bottom:none}
+.progress-name{font-size:13px;font-weight:500;flex:1}
+.progress-bar{width:100px;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;background:var(--accent)}
+.progress-val{font-size:12px;font-family:'Space Mono',monospace;color:var(--text2);min-width:40px;text-align:right}
+
+/* SETTINGS */
+.settings-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px}
+.settings-section-title{padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.settings-row{display:flex;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border);gap:14px}
+.settings-row:last-child{border-bottom:none}
+.settings-label{font-size:13px;font-weight:500;flex:1}
+.settings-desc{font-size:11px;color:var(--text3);margin-top:2px}
+.toggle{width:40px;height:22px;background:var(--border2);border-radius:11px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0}
+.toggle.on{background:var(--accent)}
+.toggle-thumb{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.toggle.on .toggle-thumb{left:20px}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;gap:6px;padding:14px 18px;border-top:1px solid var(--border)}
+.page-btn{width:30px;height:30px;border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;background:transparent;transition:all 0.15s}
+.page-btn:hover{background:var(--surface2)}
+.page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.page-info{font-size:12px;color:var(--text3);margin-left:auto}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 18px;border-radius:var(--radius-lg);font-size:13px;display:flex;align-items:center;gap:10px;z-index:9999;opacity:0;transform:translateY(10px);transition:all 0.25s}
+.toast.show{opacity:1;transform:translateY(0)}
+
+.dot-online{width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block;margin-left:4px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><i class="ti ti-building-warehouse" aria-hidden="true"></i></div>
+    <div>
+      <div class="logo-text">WareTrack</div>
+      <span class="logo-sub">Warehouse Management</span>
+    </div>
+  </div>
+  <div class="nav-section">Overview</div>
+  <div class="nav-item active" onclick="goto('dashboard')"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
+  <div class="nav-section">Inventory</div>
+  <div class="nav-item" onclick="goto('items')"><i class="ti ti-package"></i> Items <span class="badge" id="lowStockBadge">3</span></div>
+  <div class="nav-item" onclick="goto('categories')"><i class="ti ti-tag"></i> Categories</div>
+  <div class="nav-item" onclick="goto('locations')"><i class="ti ti-map-pin"></i> Locations</div>
+  <div class="nav-section">Operations</div>
+  <div class="nav-item" onclick="goto('transfers')"><i class="ti ti-arrows-exchange"></i> Transfer</div>
+  <div class="nav-item" onclick="goto('suppliers')"><i class="ti ti-truck"></i> Suppliers</div>
+  <div class="nav-item" onclick="goto('reports')"><i class="ti ti-chart-bar"></i> Reports</div>
+  <div class="nav-item" onclick="goto('settings')"><i class="ti ti-settings"></i> Settings</div>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar">VN</div>
+      <div>
+        <div class="user-name">Vincent N. <span class="dot-online"></span></div>
+        <div class="user-role">Warehouse Admin</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-search">
+      <i class="ti ti-search" style="font-size:14px;color:var(--text3)" aria-hidden="true"></i>
+      <input type="text" placeholder="Cari item, SKU, supplier..." id="globalSearch" oninput="handleSearch(this.value)" />
+    </div>
+    <button class="topbar-btn" title="Notifikasi" onclick="goto('reports')"><i class="ti ti-bell" aria-hidden="true"></i></button>
+    <button class="topbar-btn" title="Refresh"><i class="ti ti-refresh" aria-hidden="true"></i></button>
+  </div>
+
+  <!-- ===================== PAGE: DASHBOARD ===================== -->
+  <div class="page active" id="page-dashboard">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-package"></i> Total Items</div>
+        <div class="stat-value">1,248</div>
+        <div class="stat-sub"><span class="stat-badge badge-green">↑ 12%</span> dari bulan lalu</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-alert-triangle"></i> Stok Rendah</div>
+        <div class="stat-value" style="color:#dc2626">3</div>
+        <div class="stat-sub"><span class="stat-badge badge-red">Perlu restock</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-arrows-exchange"></i> Transfer Aktif</div>
+        <div class="stat-value">7</div>
+        <div class="stat-sub"><span class="stat-badge badge-amber">2 pending</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-currency-dollar"></i> Nilai Stok</div>
+        <div class="stat-value" style="font-size:20px">Rp 284M</div>
+        <div class="stat-sub"><span class="stat-badge badge-blue">↑ 8.4%</span> bulan ini</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
+      <!-- Chart -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-chart-bar" style="color:var(--accent)"></i> Pergerakan Stok — 6 Bulan</div>
+          <span class="stat-badge badge-blue">Live</span>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-bars" id="mainChart"></div>
+          <div style="display:flex;gap:16px;font-size:11px;color:var(--text3)">
+            <span><span style="display:inline-block;width:10px;height:10px;background:#1d4ed8;border-radius:2px;margin-right:4px"></span>Masuk</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:#f87171;border-radius:2px;margin-right:4px"></span>Keluar</span>
+          </div>
+        </div>
+      </div>
+      <!-- Activity -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Aktivitas Terbaru</div></div>
+        <div class="activity-list">
+          <div class="activity-item">
+            <div class="activity-dot" style="background:#22c55e"></div>
+            <div><div class="activity-text">Restock <strong>Laptop Asus ROG</strong> +50 unit</div><div class="activity-time">2 menit lalu</div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:#3b82f6"></div>
+            <div><div class="activity-text">Transfer dari Zona A → Zona C</div><div class="activity-time">15 menit lalu</div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:#f59e0b"></div>
+            <div><div class="activity-text">Stok rendah: <strong>SSD 1TB</strong> (8 unit)</div><div class="activity-time">1 jam lalu</div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:#8b5cf6"></div>
+            <div><div class="activity-text">Item baru ditambahkan: Mouse Logitech G502</div><div class="activity-time">3 jam lalu</div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:#ec4899"></div>
+            <div><div class="activity-text">Supplier baru: PT. Maju Jaya</div><div class="activity-time">Kemarin</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="card" style="padding:14px 18px">
+      <div class="card-title" style="margin-bottom:12px"><i class="ti ti-bell" style="color:#f59e0b"></i> Peringatan Sistem</div>
+      <div class="alert alert-danger"><i class="ti ti-alert-circle"></i><div><strong>Stok Kritis:</strong> Keyboard Mechanical (2 unit tersisa) — segera lakukan reorder</div></div>
+      <div class="alert alert-warning"><i class="ti ti-alert-triangle"></i><div><strong>Stok Rendah:</strong> SSD 1TB (8 unit) dan RAM DDR5 (12 unit) mendekati minimum</div></div>
+      <div class="alert alert-success"><i class="ti ti-check"></i><div>Penerimaan barang dari PT. Tech Distributor telah selesai diverifikasi (250 unit)</div></div>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE: ITEMS ===================== -->
+  <div class="page" id="page-items">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Manajemen Item</div>
+        <div class="section-sub">Total 1.248 item aktif di gudang</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <select style="width:140px" id="filterCat"><option value="">Semua Kategori</option><option>Elektronik</option><option>Aksesoris</option><option>Komponen</option><option>Peripheral</option></select>
+        <select style="width:120px" id="filterStock"><option value="">Semua Stok</option><option value="low">Stok Rendah</option><option value="ok">Normal</option></select>
+        <button class="btn btn-primary" onclick="openModal('addItemModal')"><i class="ti ti-plus"></i> Tambah Item</button>
+      </div>
+    </div>
+    <div class="card">
+      <table id="itemsTable">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>SKU</th>
+            <th>Kategori</th>
+            <th>Stok</th>
+            <th>Level</th>
+            <th>Lokasi</th>
+            <th>Harga Beli</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="itemsBody"></tbody>
+      </table>
+      <div class="pagination">
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">3</button>
+        <button class="page-btn"><i class="ti ti-chevron-right"></i></button>
+        <span class="page-info">Menampilkan 1–10 dari 1.248 item</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE: CATEGORIES ===================== -->
+  <div class="page" id="page-categories">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Kategori Barang</div>
+        <div class="section-sub">Kelola kategori dan sub-kategori item</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('addCatModal')"><i class="ti ti-plus"></i> Tambah Kategori</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px" id="catCards"></div>
+  </div>
+
+  <!-- ===================== PAGE: LOCATIONS ===================== -->
+  <div class="page" id="page-locations">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Peta Lokasi Gudang</div>
+        <div class="section-sub">Visualisasi kapasitas setiap zona penyimpanan</div>
+      </div>
+      <div style="display:flex;gap:8px;font-size:11px;align-items:center">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;background:var(--green-bg);border:1px solid #86efac;border-radius:3px;display:inline-block"></span>Tersedia</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;background:var(--amber-bg);border:1px solid #fbbf24;border-radius:3px;display:inline-block"></span>50-79%</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;background:var(--blue-bg);border:1px solid #93c5fd;border-radius:3px;display:inline-block"></span>80-99%</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;background:#e8e5dc;border:1px solid #d0cec4;border-radius:3px;display:inline-block"></span>Penuh</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="card">
+        <div class="card-header"><div class="card-title"><i class="ti ti-map" style="color:var(--accent)"></i> Zona A — Lantai 1</div></div>
+        <div class="zone-grid" id="zoneA"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><i class="ti ti-map" style="color:#8b5cf6"></i> Zona B — Lantai 1</div></div>
+        <div class="zone-grid" id="zoneB"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><i class="ti ti-map" style="color:#f59e0b"></i> Zona C — Lantai 2</div></div>
+        <div class="zone-grid" id="zoneC"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><i class="ti ti-map" style="color:#22c55e"></i> Zona D — Lantai 2</div></div>
+        <div class="zone-grid" id="zoneD"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE: TRANSFERS ===================== -->
+  <div class="page" id="page-transfers">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Transfer & Mutasi Barang</div>
+        <div class="section-sub">Kelola pergerakan barang antar lokasi</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('transferModal')"><i class="ti ti-plus"></i> Buat Transfer</button>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this,'all')">Semua</div>
+      <div class="tab" onclick="switchTab(this,'pending')">Pending</div>
+      <div class="tab" onclick="switchTab(this,'in-transit')">In Transit</div>
+      <div class="tab" onclick="switchTab(this,'done')">Selesai</div>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>ID Transfer</th>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Dari</th>
+            <th>Ke</th>
+            <th>Tanggal</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="transfersBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE: SUPPLIERS ===================== -->
+  <div class="page" id="page-suppliers">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Manajemen Supplier</div>
+        <div class="section-sub">5 supplier aktif terdaftar</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('addSupplierModal')"><i class="ti ti-plus"></i> Tambah Supplier</button>
+    </div>
+    <div class="supplier-cards" id="supplierCards"></div>
+  </div>
+
+  <!-- ===================== PAGE: REPORTS ===================== -->
+  <div class="page" id="page-reports">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Laporan & Analitik</div>
+        <div class="section-sub">Periode: Juni 2025</div>
+      </div>
+      <button class="btn"><i class="ti ti-download"></i> Export PDF</button>
+    </div>
+    <div class="stat-grid" style="margin-bottom:20px">
+      <div class="stat-card">
+        <div class="stat-label">Total Masuk</div>
+        <div class="stat-value" style="color:#166534">↑ 842</div>
+        <div class="stat-sub">unit bulan ini</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Keluar</div>
+        <div class="stat-value" style="color:#dc2626">↓ 613</div>
+        <div class="stat-sub">unit bulan ini</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Net Perubahan</div>
+        <div class="stat-value">+229</div>
+        <div class="stat-sub">unit netto</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Akurasi Stok</div>
+        <div class="stat-value" style="color:#166534">98.4%</div>
+        <div class="stat-sub">vs fisik aktual</div>
+      </div>
+    </div>
+    <div class="report-grid">
+      <div class="card">
+        <div class="card-header"><div class="card-title"><i class="ti ti-trending-up"></i> Top Item by Movement</div></div>
+        <div style="padding:14px 18px" id="reportTopItems"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><i class="ti ti-chart-pie"></i> Distribusi Kategori</div></div>
+        <div style="padding:14px 18px" id="reportCatDist"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE: SETTINGS ===================== -->
+  <div class="page" id="page-settings">
+    <div class="section-header">
+      <div class="section-title">Pengaturan Sistem</div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title"><i class="ti ti-building-warehouse"></i> Informasi Gudang</div>
+      <div style="padding:16px 18px">
+        <div class="form-grid">
+          <div class="form-group"><label>Nama Gudang</label><input value="Gudang Utama Jakarta" /></div>
+          <div class="form-group"><label>Kode Gudang</label><input value="WH-JKT-001" /></div>
+          <div class="form-group full"><label>Alamat</label><textarea style="min-height:60px">Jl. Industri Raya No. 45, Cakung, Jakarta Timur 13910</textarea></div>
+          <div class="form-group"><label>Kapasitas Total (unit)</label><input value="10,000" /></div>
+          <div class="form-group"><label>Kapasitas Terpakai (%)</label><input value="62.4" /></div>
+        </div>
+        <div style="margin-top:14px"><button class="btn btn-primary" onclick="showToast('Pengaturan gudang berhasil disimpan!')">Simpan Perubahan</button></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title"><i class="ti ti-bell"></i> Notifikasi & Peringatan</div>
+      <div class="settings-row">
+        <div><div class="settings-label">Peringatan Stok Rendah</div><div class="settings-desc">Kirim notifikasi saat stok di bawah minimum</div></div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-label">Laporan Harian</div><div class="settings-desc">Kirim ringkasan harian via email</div></div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-label">Notifikasi Transfer</div><div class="settings-desc">Alert saat ada mutasi barang baru</div></div>
+        <div class="toggle" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-label">Backup Otomatis</div><div class="settings-desc">Backup database setiap 24 jam</div></div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title"><i class="ti ti-shield"></i> Keamanan & Akses</div>
+      <div class="settings-row">
+        <div><div class="settings-label">Two-Factor Authentication</div><div class="settings-desc">Aktifkan 2FA untuk semua admin</div></div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-label">Session Timeout</div><div class="settings-desc">Logout otomatis setelah tidak aktif</div></div>
+        <select style="width:120px"><option>30 menit</option><option>1 jam</option><option>4 jam</option></select>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===================== MODALS ===================== -->
+<!-- Add Item Modal -->
+<div class="modal-overlay" id="addItemModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="width:32px;height:32px;background:var(--accent-light);border-radius:6px;display:flex;align-items:center;justify-content:center"><i class="ti ti-package" style="color:var(--accent)"></i></div>
+      <div class="modal-title">Tambah Item Baru</div>
+      <button class="modal-close" onclick="closeModal('addItemModal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>Nama Item *</label><input placeholder="Cth: Laptop Asus ROG G14" id="newItemName" /></div>
+        <div class="form-group"><label>SKU *</label><input placeholder="AUTO" id="newItemSku" /></div>
+        <div class="form-group"><label>Kategori *</label><select id="newItemCat"><option>Elektronik</option><option>Aksesoris</option><option>Komponen</option><option>Peripheral</option></select></div>
+        <div class="form-group"><label>Stok Awal *</label><input type="number" placeholder="0" id="newItemStock" /></div>
+        <div class="form-group"><label>Stok Minimum</label><input type="number" placeholder="10" id="newItemMin" /></div>
+        <div class="form-group"><label>Lokasi</label><select id="newItemLoc"><option>Zona A - Rak 01</option><option>Zona B - Rak 05</option><option>Zona C - Rak 12</option><option>Zona D - Rak 08</option></select></div>
+        <div class="form-group"><label>Harga Beli (Rp)</label><input type="number" placeholder="0" id="newItemPrice" /></div>
+        <div class="form-group full"><label>Deskripsi</label><textarea placeholder="Deskripsi item..." id="newItemDesc"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('addItemModal')">Batal</button>
+      <button class="btn btn-primary" onclick="addItem()"><i class="ti ti-check"></i> Simpan Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal-overlay" id="addCatModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Tambah Kategori</div>
+      <button class="modal-close" onclick="closeModal('addCatModal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>Nama Kategori *</label><input placeholder="Cth: Elektronik" id="newCatName" /></div>
+        <div class="form-group full"><label>Deskripsi</label><textarea placeholder="Deskripsi kategori..." id="newCatDesc"></textarea></div>
+        <div class="form-group"><label>Warna Label</label><select id="newCatColor"><option>Biru</option><option>Hijau</option><option>Kuning</option><option>Merah</option><option>Ungu</option></select></div>
+        <div class="form-group"><label>Icon</label><select id="newCatIcon"><option>📦 Paket</option><option>💻 Elektronik</option><option>🔩 Komponen</option><option>🖱️ Peripheral</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('addCatModal')">Batal</button>
+      <button class="btn btn-primary" onclick="addCategory()"><i class="ti ti-check"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transfer Modal -->
+<div class="modal-overlay" id="transferModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Buat Transfer Baru</div>
+      <button class="modal-close" onclick="closeModal('transferModal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>Item *</label><select><option>Laptop Asus ROG G14</option><option>SSD Samsung 1TB</option><option>RAM Corsair DDR5</option><option>Keyboard Mechanical</option><option>Monitor LG 27"</option></select></div>
+        <div class="form-group"><label>Jumlah *</label><input type="number" placeholder="0" /></div>
+        <div class="form-group"><label>Prioritas</label><select><option>Normal</option><option>Tinggi</option><option>Urgent</option></select></div>
+        <div class="form-group"><label>Dari Lokasi *</label><select><option>Zona A - Rak 01</option><option>Zona B - Rak 05</option><option>Zona C - Rak 12</option></select></div>
+        <div class="form-group"><label>Ke Lokasi *</label><select><option>Zona D - Rak 08</option><option>Zona A - Rak 03</option><option>Zona B - Rak 10</option></select></div>
+        <div class="form-group full"><label>Catatan</label><textarea placeholder="Catatan transfer..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('transferModal')">Batal</button>
+      <button class="btn btn-primary" onclick="createTransfer()"><i class="ti ti-send"></i> Buat Transfer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supplier Modal -->
+<div class="modal-overlay" id="addSupplierModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Tambah Supplier Baru</div>
+      <button class="modal-close" onclick="closeModal('addSupplierModal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>Nama Perusahaan *</label><input placeholder="Cth: PT. Tech Distributor" /></div>
+        <div class="form-group"><label>Kontak Person</label><input placeholder="Nama PIC" /></div>
+        <div class="form-group"><label>No. Telepon</label><input placeholder="+62..." /></div>
+        <div class="form-group full"><label>Email</label><input placeholder="supplier@email.com" /></div>
+        <div class="form-group full"><label>Alamat</label><textarea placeholder="Alamat supplier..."></textarea></div>
+        <div class="form-group"><label>Kategori Produk</label><select><option>Elektronik</option><option>Aksesoris</option><option>Semua</option></select></div>
+        <div class="form-group"><label>Payment Terms</label><select><option>Net 30</option><option>Net 60</option><option>COD</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('addSupplierModal')">Batal</button>
+      <button class="btn btn-primary" onclick="showToast('Supplier berhasil ditambahkan!');closeModal('addSupplierModal')"><i class="ti ti-check"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="ti ti-check"></i> <span id="toastMsg"></span></div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────
+const items = [
+  {id:1,name:'Laptop Asus ROG G14',sku:'LAP-ASUS-001',cat:'Elektronik',stock:45,min:10,loc:'Zona A-01',price:18500000,icon:'💻',status:'ok'},
+  {id:2,name:'SSD Samsung 870 EVO 1TB',sku:'SSD-SAM-1TB',cat:'Komponen',stock:8,min:15,loc:'Zona B-03',price:1250000,icon:'💾',status:'low'},
+  {id:3,name:'RAM Corsair Vengeance DDR5',sku:'RAM-COR-32G',cat:'Komponen',stock:12,min:20,loc:'Zona B-04',price:2100000,icon:'🔧',status:'low'},
+  {id:4,name:'Keyboard Logitech G915',sku:'KBD-LOG-G915',cat:'Peripheral',stock:2,min:10,loc:'Zona C-12',price:2750000,icon:'⌨️',status:'critical'},
+  {id:5,name:'Monitor LG UltraWide 27"',sku:'MON-LG-27W',cat:'Elektronik',stock:23,min:5,loc:'Zona A-05',price:5200000,icon:'🖥️',status:'ok'},
+  {id:6,name:'Mouse Logitech G502',sku:'MOU-LOG-502',cat:'Peripheral',stock:67,min:10,loc:'Zona C-08',price:850000,icon:'🖱️',status:'ok'},
+  {id:7,name:'Headset Sony WH-1000XM5',sku:'HDS-SON-XM5',cat:'Aksesoris',stock:18,min:8,loc:'Zona D-02',price:4300000,icon:'🎧',status:'ok'},
+  {id:8,name:'Webcam Logitech C922',sku:'CAM-LOG-C922',cat:'Peripheral',stock:31,min:5,loc:'Zona D-07',price:1450000,icon:'📷',status:'ok'},
+  {id:9,name:'USB Hub Anker 10-Port',sku:'USB-ANK-10P',cat:'Aksesoris',stock:44,min:10,loc:'Zona A-09',price:450000,icon:'🔌',status:'ok'},
+  {id:10,name:'Cooling Pad Deepcool',sku:'CPD-DEP-N65',cat:'Aksesoris',stock:29,min:8,loc:'Zona B-11',price:380000,icon:'🌬️',status:'ok'},
+];
+
+const transfers = [
+  {id:'TRF-2506-001',item:'Laptop Asus ROG G14',qty:10,from:'Zona A-01',to:'Zona C-05',date:'2025-06-03',status:'done'},
+  {id:'TRF-2506-002',item:'SSD Samsung 1TB',qty:25,from:'Receiving',to:'Zona B-03',date:'2025-06-03',status:'in-transit'},
+  {id:'TRF-2506-003',item:'RAM Corsair DDR5',qty:15,from:'Receiving',to:'Zona B-04',date:'2025-06-04',status:'pending'},
+  {id:'TRF-2506-004',item:'Mouse Logitech G502',qty:30,from:'Zona C-08',to:'Zona D-01',date:'2025-06-04',status:'pending'},
+  {id:'TRF-2506-005',item:'Monitor LG 27"',qty:5,from:'Zona A-05',to:'Dispatch',date:'2025-06-02',status:'done'},
+  {id:'TRF-2506-006',item:'Keyboard Logitech G915',qty:8,from:'Receiving',to:'Zona C-12',date:'2025-06-05',status:'in-transit'},
+];
+
+const categories = [
+  {name:'Elektronik',desc:'Laptop, monitor, dan perangkat elektronik utama',icon:'💻',count:312,color:'blue'},
+  {name:'Komponen',desc:'RAM, SSD, CPU, dan komponen internal',icon:'🔧',count:178,color:'amber'},
+  {name:'Peripheral',desc:'Keyboard, mouse, headset, dan perangkat input',icon:'⌨️',count:425,color:'green'},
+  {name:'Aksesoris',desc:'Hub, kabel, cooling pad, dan aksesori lainnya',icon:'🔌',count:333,color:'purple'},
+];
+
+const suppliers = [
+  {name:'PT. Tech Distributor Indonesia',contact:'Budi Santoso',email:'budi@techdi.co.id',phone:'+62 21 5550-1234',category:'Elektronik',rating:4.8,orders:142,logo:'🏢',color:'#dbeafe'},
+  {name:'PT. Komponen Prima',contact:'Sari Dewi',email:'sari@komponen.id',phone:'+62 21 5550-5678',category:'Komponen',rating:4.5,orders:89,logo:'🔩',color:'#fef3c7'},
+  {name:'PT. Maju Jaya Electronics',contact:'Andi Rahman',email:'andi@majujaya.com',phone:'+62 22 5550-9012',category:'Peripheral',rating:4.2,orders:67,logo:'🎮',color:'#dcfce7'},
+  {name:'CV. Global Accessories',contact:'Rina Susanti',email:'rina@globalacc.id',phone:'+62 31 5550-3456',category:'Aksesoris',rating:4.6,orders:201,logo:'🌐',color:'#f3e8ff'},
+  {name:'PT. Nusantara Digital',contact:'Hendra Wijaya',email:'hendra@nusadigital.id',phone:'+62 21 5550-7890',category:'Semua',rating:4.9,orders:318,logo:'🚀',color:'#fce7f3'},
+];
+
+// ─── RENDER ──────────────────────────────────────────────────
+function renderItems(list){
+  const b=document.getElementById('itemsBody');
+  b.innerHTML=list.map(it=>{
+    const pct=Math.min(100,Math.round((it.stock/Math.max(it.min*3,50))*100));
+    const barColor=it.status==='critical'?'#ef4444':it.status==='low'?'#f59e0b':'#22c55e';
+    const badge=it.status==='critical'?'<span class="stat-badge badge-red">Kritis</span>':it.status==='low'?'<span class="stat-badge badge-amber">Rendah</span>':'<span class="stat-badge badge-green">Normal</span>';
+    return`<tr>
+      <td><div class="item-info"><div class="item-thumb">${it.icon}</div><div><div class="item-name">${it.name}</div></div></div></td>
+      <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)">${it.sku}</span></td>
+      <td><span class="stat-badge badge-blue">${it.cat}</span></td>
+      <td><strong>${it.stock}</strong> <span style="color:var(--text3);font-size:11px">/ min ${it.min}</span></td>
+      <td><div class="stock-bar"><div class="stock-bar-fill" style="width:${pct}%;background:${barColor}"></div></div></td>
+      <td style="font-size:12px;color:var(--text2)">${it.loc}</td>
+      <td style="font-family:'Space Mono',monospace;font-size:12px">Rp ${(it.price/1e6).toFixed(2)}M</td>
+      <td>${badge}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="editItem(${it.id})"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm btn-danger" onclick="deleteItem(${it.id})"><i class="ti ti-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCategories(){
+  const colorMap={blue:'badge-blue',amber:'badge-amber',green:'badge-green',purple:{bg:'#f3e8ff',txt:'#7c3aed'}};
+  document.getElementById('catCards').innerHTML=categories.map(c=>`
+    <div class="card" style="padding:18px">
+      <div style="font-size:28px;margin-bottom:10px">${c.icon}</div>
+      <div style="font-weight:600;font-size:15px;margin-bottom:4px">${c.name}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:14px">${c.desc}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span class="stat-badge badge-blue">${c.count} item</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-sm btn-danger"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderZone(id,seed){
+  const types=['empty','empty','low','low','low','mid','mid','high','full'];
+  let h='';
+  for(let i=0;i<24;i++){
+    const t=types[(i*seed+i*3)%types.length];
+    const row=String.fromCharCode(65+Math.floor(i/6));
+    const col=String((i%6)+1).padStart(2,'0');
+    h+=`<div class="zone-cell zone-${t}" title="${row}${col}: ${t}" onclick="zoneClick('${row}${col}','${t}')">${row}${col}</div>`;
+  }
+  document.getElementById(id).innerHTML=h;
+}
+
+function renderTransfers(filter){
+  const list=filter&&filter!=='all'?transfers.filter(t=>t.status===filter):transfers;
+  const statusMap={'done':'<span class="stat-badge badge-green">Selesai</span>','in-transit':'<span class="stat-badge badge-blue">In Transit</span>','pending':'<span class="stat-badge badge-amber">Pending</span>'};
+  document.getElementById('transfersBody').innerHTML=list.map(t=>`<tr>
+    <td style="font-family:'Space Mono',monospace;font-size:11px">${t.id}</td>
+    <td style="font-weight:500">${t.item}</td>
+    <td><strong>${t.qty}</strong></td>
+    <td style="color:var(--text2)">${t.from}</td>
+    <td style="color:var(--text2)">${t.to}</td>
+    <td style="font-size:12px;color:var(--text3)">${t.date}</td>
+    <td>${statusMap[t.status]}</td>
+    <td><div style="display:flex;gap:6px">
+      ${t.status==='pending'?`<button class="btn btn-sm btn-primary" onclick="showToast('Transfer #${t.id} diproses!')">Proses</button>`:''}
+      <button class="btn btn-sm"><i class="ti ti-eye"></i></button>
+    </div></td>
+  </tr>`).join('');
+}
+
+function renderSuppliers(){
+  document.getElementById('supplierCards').innerHTML=suppliers.map(s=>`
+    <div class="supplier-card">
+      <div class="supplier-logo" style="background:${s.color};font-size:22px">${s.logo}</div>
+      <div class="supplier-name">${s.name}</div>
+      <div class="supplier-meta">${s.contact} · ${s.category}</div>
+      <div style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap">
+        <span class="stat-badge badge-blue">${s.orders} pesanan</span>
+        <span class="stat-badge badge-green">★ ${s.rating}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">${s.email}<br>${s.phone}</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-primary"><i class="ti ti-mail"></i> Hubungi</button>
+        <button class="btn btn-sm"><i class="ti ti-edit"></i></button>
+      </div>
+    </div>`).join('');
+}
+
+function renderChart(){
+  const months=['Jan','Feb','Mar','Apr','Mei','Jun'];
+  const inData=[320,480,410,560,620,490];
+  const outData=[240,380,320,420,510,380];
+  const maxVal=Math.max(...inData,...outData);
+  document.getElementById('mainChart').innerHTML=months.map((m,i)=>`
+    <div class="bar-col">
+      <div style="display:flex;gap:3px;align-items:flex-end;height:130px">
+        <div class="bar" style="background:#1d4ed8;height:${Math.round((inData[i]/maxVal)*130)}px;width:18px"></div>
+        <div class="bar" style="background:#f87171;height:${Math.round((outData[i]/maxVal)*130)}px;width:18px"></div>
+      </div>
+      <div class="bar-label">${m}</div>
+    </div>`).join('');
+}
+
+function renderReports(){
+  const topItems=[
+    {name:'Laptop Asus ROG G14',val:85},
+    {name:'Mouse Logitech G502',val:72},
+    {name:'SSD Samsung 1TB',val:61},
+    {name:'RAM Corsair DDR5',val:54},
+    {name:'Monitor LG 27"',val:48},
+  ];
+  const catDist=[
+    {name:'Peripheral',pct:34,color:'#1d4ed8'},
+    {name:'Aksesoris',pct:27,color:'#f59e0b'},
+    {name:'Elektronik',pct:25,color:'#22c55e'},
+    {name:'Komponen',pct:14,color:'#8b5cf6'},
+  ];
+  document.getElementById('reportTopItems').innerHTML=topItems.map(t=>`
+    <div class="progress-item">
+      <div class="progress-name">${t.name}</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${t.val}%;background:var(--accent)"></div></div>
+      <div class="progress-val">${t.val}%</div>
+    </div>`).join('');
+  document.getElementById('reportCatDist').innerHTML=catDist.map(c=>`
+    <div class="progress-item">
+      <div class="progress-name">${c.name}</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${c.pct}%;background:${c.color}"></div></div>
+      <div class="progress-val">${c.pct}%</div>
+    </div>`).join('');
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────
+function goto(page){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const navMap={'dashboard':0,'items':2,'categories':3,'locations':4,'transfers':5,'suppliers':6,'reports':7,'settings':8};
+  const navItems=document.querySelectorAll('.nav-item');
+  if(navItems[navMap[page]])navItems[navMap[page]].classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  const titles={'dashboard':'Dashboard','items':'Manajemen Item','categories':'Kategori','locations':'Peta Lokasi','transfers':'Transfer Barang','suppliers':'Supplier','reports':'Laporan & Analitik','settings':'Pengaturan'};
+  document.getElementById('pageTitle').textContent=titles[page]||page;
+  if(page==='transfers')renderTransfers('all');
+}
+
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function addItem(){
+  const name=document.getElementById('newItemName').value;
+  if(!name){document.getElementById('newItemName').focus();return;}
+  const newItem={id:items.length+1,name,sku:document.getElementById('newItemSku').value||'SKU-'+Date.now().toString().slice(-6),cat:document.getElementById('newItemCat').value,stock:parseInt(document.getElementById('newItemStock').value)||0,min:parseInt(document.getElementById('newItemMin').value)||10,loc:document.getElementById('newItemLoc').value,price:parseInt(document.getElementById('newItemPrice').value)||0,icon:'📦',status:'ok'};
+  items.unshift(newItem);
+  renderItems(items.slice(0,10));
+  closeModal('addItemModal');
+  showToast(`Item "${name}" berhasil ditambahkan!`);
+  document.getElementById('newItemName').value='';
+  document.getElementById('newItemSku').value='';
+  document.getElementById('newItemStock').value='';
+  document.getElementById('newItemPrice').value='';
+}
+
+function addCategory(){
+  const name=document.getElementById('newCatName').value;
+  if(!name)return;
+  categories.push({name,desc:document.getElementById('newCatDesc').value,icon:'📦',count:0,color:'blue'});
+  renderCategories();
+  closeModal('addCatModal');
+  showToast(`Kategori "${name}" berhasil ditambahkan!`);
+}
+
+function createTransfer(){
+  showToast('Transfer baru berhasil dibuat!');
+  closeModal('transferModal');
+  renderTransfers('all');
+}
+
+function deleteItem(id){
+  const idx=items.findIndex(i=>i.id===id);
+  if(idx>-1){const name=items[idx].name;items.splice(idx,1);renderItems(items.slice(0,10));showToast(`Item "${name}" dihapus.`);}
+}
+
+function editItem(id){showToast('Fitur edit item segera hadir!');}
+function zoneClick(code,type){showToast(`Zona ${code}: status ${type}`);}
+
+function switchTab(el,filter){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderTransfers(filter);
+}
+
+function handleSearch(val){
+  if(!val){renderItems(items.slice(0,10));return;}
+  const filtered=items.filter(i=>i.name.toLowerCase().includes(val.toLowerCase())||i.sku.toLowerCase().includes(val.toLowerCase()));
+  renderItems(filtered);
+}
+
+// Close modal on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// ─── INIT ────────────────────────────────────────────────────
+renderItems(items.slice(0,10));
+renderCategories();
+renderZone('zoneA',7);
+renderZone('zoneB',3);
+renderZone('zoneC',11);
+renderZone('zoneD',5);
+renderTransfers('all');
+renderSuppliers();
+renderChart();
+renderReports();
+</script>
+</body>
+</html>
